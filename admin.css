@@ -1,0 +1,527 @@
+import { useEffect, useState } from "react";
+import { userApi, UserRecord } from "../../api/client";
+import './admin.css'
+import { CiEdit } from "react-icons/ci";
+
+export default function UserMaster() {
+  const [users, setUsers] = useState<UserRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [roleId, setRoleId] = useState(2);
+  const [showPassword, setShowPassword] = useState(false);
+  const [editingUserId, setEditingUserId] = useState<number | null>(null);
+  const [userStatus, setUserStatus] = useState("Active");
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const data = await userApi.list();
+      setUsers(data);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const handleEdit = async (
+    userId: number
+  ) => {
+
+    try {
+
+      const user =
+        await userApi.details(userId);
+
+      setEditingUserId(user.user_id);
+
+      setUsername(user.username);
+
+      setRoleId(user.role_id);
+
+      setUserStatus(user.status);
+
+    } catch (error) {
+
+      alert("Failed to load user");
+
+    }
+  };
+
+  const handleCreate = async () => {
+    if (!username || !password) {
+      alert("Username and Password required");
+      return;
+    }
+
+    try {
+      await userApi.create({
+        username,
+        password,
+        role_id: roleId,
+      });
+
+      alert("User Created Successfully");
+
+      setUsername("");
+      setPassword("");
+      setRoleId(2);
+
+      loadUsers();
+    } catch (error: any) {
+      alert(
+        error?.response?.data?.detail ||
+        "Failed to create user"
+      );
+    }
+  };
+
+
+  const handleUpdate = async () => {
+
+    if (!editingUserId) return;
+
+    try {
+
+      await userApi.update(
+        editingUserId,
+        {
+          username,
+          role_id: roleId,
+          status: userStatus
+        }
+      );
+
+      alert("User Updated Successfully");
+
+      setEditingUserId(null);
+
+      setUsername("");
+
+      setPassword("");
+
+      setRoleId(2);
+
+      setUserStatus("Active");
+
+      loadUsers();
+
+    } catch (error: any) {
+
+      alert(
+        error?.response?.data?.detail ||
+        "Failed to update user"
+      );
+
+    }
+
+  };
+
+  const handleStatusToggle = async (
+    userId: number,
+    currentStatus: string
+  ) => {
+
+    try {
+
+      const newStatus =
+        currentStatus.toLowerCase() === "active"
+          ? "Inactive"
+          : "Active";
+
+      // await userApi.changeStatus(
+      // userId,
+      // newStatus
+      // );
+
+      // loadUsers();
+
+      await userApi.changeStatus(
+        userId,
+        newStatus
+      );
+
+      setUsers(prev =>
+        prev.map(user =>
+          user.user_id === userId
+            ? { ...user, status: newStatus }
+            : user
+        )
+      );
+
+    } catch (error) {
+
+      alert(
+        "Failed to update status"
+      );
+
+    }
+
+  };
+
+  return (
+    //     <div className="max-w-7xl mx-auto p-6">
+
+    //       <div className="card p-6">
+
+    //         <h2 className="text-2xl font-semibold mb-6">
+    //         {editingUserId
+    //             ? "Edit User"
+    //             : "Create User"}
+    //         </h2>
+
+    //         <div className="grid md:grid-cols-3 gap-6">
+
+    //             {/* Username */}
+
+    //             <div>
+    //             <label className="block text-sm font-medium mb-2">
+    //                 Username
+    //             </label>
+
+    //             <input
+    //                 type="text"
+    //                 value={username}
+    //                 onChange={(e) => setUsername(e.target.value)}
+    //                 className="w-full border border-gray-300 rounded-lg px-4 py-3"
+    //             />
+    //             </div>
+
+    //             {/* Password */}
+
+    //             <div>
+    //             <label className="block text-sm font-medium mb-2">
+    //                 Password
+    //             </label>
+
+    //             <div className="relative">
+
+    //                 <input
+    //                 type={showPassword ? "text" : "password"}
+    //                 value={password}
+    //                 onChange={(e) => setPassword(e.target.value)}
+    //                 className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12"
+    //                 />
+
+    //                 <button
+    //                 type="button"
+    //                 className="absolute right-3 top-1/2 -translate-y-1/2"
+    //                 onMouseDown={() => setShowPassword(true)}
+    //                 onMouseUp={() => setShowPassword(false)}
+    //                 onMouseLeave={() => setShowPassword(false)}
+    //                 >
+    //                 👁
+    //                 </button>
+
+    //             </div>
+    //             </div>
+
+    //             {/* Role */}
+
+    //             <div>
+    //             <label className="block text-sm font-medium mb-2">
+    //                 Role
+    //             </label>
+
+    //             <select
+    //                 value={roleId}
+    //                 onChange={(e) => setRoleId(Number(e.target.value))}
+    //                 className="w-full border border-gray-300 rounded-lg px-4 py-3"
+    //             >
+    //                 <option value={2}>User</option>
+    //                 <option value={1}>Admin</option>
+    //             </select>
+    //             </div>
+
+    //     </div>
+
+    //   <div className="mt-6 flex justify-center">
+    //     <button
+    //         onClick={
+    //             editingUserId
+    //             ? handleUpdate
+    //             : handleCreate
+    //         }
+    //         className="btn-primary px-10"
+    //         >
+    //         {editingUserId
+    //             ? "Update User"
+    //             : "Create User"}
+    //     </button>
+    //   </div>
+
+    // </div>
+
+    //       <div className="card p-6">
+    //         <h2 className="text-xl font-semibold mb-4">
+    //           User List
+    //         </h2>
+
+    //         {loading ? (
+    //           <p>Loading...</p>
+    //         ) : (
+    //           <table className="w-full">
+
+    //             <thead>
+    //               <tr className="border-b">
+
+    //                 <th className="text-left py-3">
+    //                   Action
+    //                 </th>
+
+    //                 <th className="text-left py-3">
+    //                   Username
+    //                 </th>
+
+    //                 <th className="text-left py-3">
+    //                   Role
+    //                 </th>
+
+    //                 <th className="text-left py-3">
+    //                     Toggle Status
+    //                 </th>
+
+    //               </tr>
+    //             </thead>
+
+    //             <tbody>
+
+    //               {users.map((user) => (
+    //                 <tr
+    //                   key={user.user_id}
+    //                   className="border-b"
+    //                 >
+
+    //                   <td className="py-3">
+
+    //                     <button
+    //                         onClick={() =>
+    //                         handleEdit(user.user_id)
+    //                         }
+    //                         className="text-blue-600 font-medium"
+    //                     >
+    //                         Edit
+    //                   </button>
+
+    //                   </td>
+
+
+
+    //                   <td className="py-3">
+    //                     {user.username}
+    //                   </td>
+
+    //                   <td className="py-3">
+    //                     <span
+    //                         className={
+    //                           user.role_id === 1
+    //                             ? "px-2 py-1 rounded bg-purple-100 text-purple-700 text-xs font-medium"
+    //                             : "px-2 py-1 rounded bg-blue-100 text-blue-700 text-xs font-medium"
+    //                         }
+    //                       >
+    //                         {user.role_id === 1 ? "Admin" : "User"}
+    //                       </span>
+    //                   </td>
+
+
+    //                     <td className="py-3">
+
+    //                       <button
+    //                         type="button"
+    //                         onClick={() =>
+    //                           handleStatusToggle(
+    //                             user.user_id,
+    //                             user.status
+    //                           )
+    //                         }
+    //                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
+    //                           user.status.toLowerCase() === "active"
+    //                             ? "bg-green-500"
+    //                             : "bg-gray-300"
+    //                         }`}
+    //                       >
+    //                         <span
+    //                           className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
+    //                             user.status.toLowerCase() === "active"
+    //                               ? "translate-x-6"
+    //                               : "translate-x-1"
+    //                           }`}
+    //                         />
+    //                       </button>
+
+    //                     </td>
+    //                 </tr>
+    //               ))}
+
+    //             </tbody>
+
+    //           </table>
+    //         )}
+    //       </div>
+
+    //     </div>
+    <div className="container-wrapper">
+      <div className="page-title-div">
+
+        {/* Left Title */}
+        <h5 className=" page-title">
+          {editingUserId ? "Edit User" : "User Master"}
+        </h5>
+
+        {/* Right Date */}
+        <span className="right-date" style={{ fontSize: "14px" }}>
+          13 January, 2024 &nbsp;&nbsp; 11:23 AM
+        </span>
+
+      </div>
+
+      <div className="custom-card">
+
+
+
+        <div className="form-grid">
+
+          {/* Username */}
+          <div>
+            <label className="form-label">Username</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="input-field"
+            />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="form-label">Password</label>
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input-field"
+              />
+              <button
+                type="button"
+                style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)" }}
+                onMouseDown={() => setShowPassword(true)}
+                onMouseUp={() => setShowPassword(false)}
+              >
+                👁
+              </button>
+            </div>
+
+          </div>
+
+          {/* Role */}
+          <div>
+            <label className="form-label">Role</label>
+            <select
+              value={roleId}
+              onChange={(e) => setRoleId(Number(e.target.value))}
+              className="input-field"
+            >
+              <option value={2}>User</option>
+              <option value={1}>Admin</option>
+            </select>
+          </div>
+
+
+          {/* Button */}
+          <div>
+            <button className="create-btn"
+              onClick={editingUserId ? handleUpdate : handleCreate}
+            >
+              {editingUserId ? "Update User" : "Create User"}
+            </button>
+          </div>
+
+
+
+        </div>
+
+        {/* <div className="text-center mt-4">
+          <button
+            onClick={editingUserId ? handleUpdate : handleCreate}
+            className="primary-btn"
+          >
+            {editingUserId ? "Update User" : "Create User"}
+          </button>
+        </div> */}
+
+      </div>
+
+      {/* Table */}
+      <div className="custom-card">
+
+        <h2 className="mb-3 page-title">User List</h2>
+
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          <table className="table-custom">
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Toggle Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.user_id}>
+
+                  <td>
+                    <button
+                      onClick={() => handleEdit(user.user_id)}
+                      className="text-primary edit-button"
+                    >
+                      <CiEdit />
+                    </button>
+                  </td>
+
+                  <td>{user.username}</td>
+
+                  <td>
+                    <span className={user.role_id === 1 ? "badge-admin" : "badge-user"}>
+                      {user.role_id === 1 ? "Admin" : "User"}
+                    </span>
+                  </td>
+
+                  <td>
+                    <button
+                      onClick={() => handleStatusToggle(user.user_id, user.status)}
+                      className={`toggle-btn ${user.status.toLowerCase() === "active"
+                        ? "toggle-active"
+                        : "toggle-inactive"
+                        }`}
+                    >
+                      <span
+                        className={`toggle-circle ${user.status.toLowerCase() === "active"
+                          ? "circle-active"
+                          : "circle-inactive"
+                          }`}
+                      />
+                    </button>
+                  </td>
+
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+      </div>
+    </div>
+  );
+}

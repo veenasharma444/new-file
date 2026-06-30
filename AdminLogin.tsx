@@ -1,0 +1,90 @@
+import { useNavigate } from "react-router-dom";
+
+export default function AdminDashboard() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+  localStorage.removeItem("user");
+  localStorage.removeItem("company_id");
+  localStorage.removeItem("login_user");
+
+  window.location.replace("/admin/login");
+};
+
+  return (
+    <div className="space-y-8">
+
+    <div className="card p-8">
+      <div className="flex justify-between items-start">
+
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">
+            Admin Dashboard
+          </h1>
+
+          <p className="text-gray-500 mt-2">
+            Manage users, companies and company mappings.
+          </p>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 font-medium"
+        >
+          Logout
+        </button>
+
+      </div>
+    </div>
+
+      {/* <div className="grid md:grid-cols-3 gap-6"> */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+        <div
+          className="card p-6 cursor-pointer hover:shadow-md transition"
+          onClick={() => navigate("/admin/users")}
+        >
+          <h2 className="text-xl font-bold">Users</h2>
+
+          <p className="text-gray-500 mt-2">
+            Create and manage users.
+          </p>
+        </div>
+
+        <div
+          className="card p-6 cursor-pointer hover:shadow-md transition"
+          onClick={() => navigate("/admin/companies")}
+        >
+          <h2 className="text-xl font-bold">Companies</h2>
+
+          <p className="text-gray-500 mt-2">
+            Create and manage companies.
+          </p>
+        </div>
+
+        <div
+          className="card p-6 cursor-pointer hover:shadow-md transition"
+          onClick={() => navigate("/admin/mappings")}
+        >
+          <h2 className="text-xl font-bold">User Company Mapping</h2>
+
+          <p className="text-gray-500 mt-2">
+            Assign companies to users.
+          </p>
+        </div>
+
+        <div
+          className="card p-6 cursor-pointer hover:shadow-md transition"
+          onClick={() => navigate("/admin/apportal")}
+        >
+          <h2 className="text-xl font-bold">APCheck Portal</h2>
+
+          <p className="text-gray-500 mt-2">
+            Access the APCheck user application.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  );
+}            
