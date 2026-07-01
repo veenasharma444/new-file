@@ -1,0 +1,187 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import {
+  companyApi,
+  CompanyRecord
+} from "../../api/client";
+
+export default function AdminAPPortal() {
+
+  const navigate = useNavigate();
+
+  const [companies, setCompanies] =
+    useState<CompanyRecord[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [selectedCompanyId, setSelectedCompanyId] =
+  useState<number>(0);
+
+  useEffect(() => {
+
+    loadCompanies();
+
+  }, []);
+
+  const loadCompanies = async () => {
+
+    try {
+
+      const data =
+        await companyApi.list();
+
+      setCompanies(
+        data.filter(
+          c => c.status === "Active"
+        )
+      );
+
+    } catch (err) {
+
+      console.error(err);
+
+      alert(
+        "Failed to load companies"
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  };
+
+  const openCompanyPortal = (
+    company: CompanyRecord
+  ) => {
+
+    localStorage.setItem(
+      "company_id",
+      String(company.company_id)
+    );
+
+    const user =
+      JSON.parse(
+        localStorage.getItem("user") || "{}"
+      );
+
+    user.selected_company = {
+      company_id: company.company_id,
+      company_name: company.company_name,
+      company_code: company.company_code
+    };
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(user)
+    );
+
+    // navigate("/dashboard");
+    window.location.href = "/dashboard";
+  };
+
+  return (
+
+    <div className="max-w-7xl mx-auto p-6">
+
+      <div className="card p-6 mb-6">
+
+        <h1 className="text-3xl font-bold mb-2">
+          APCheck Portal
+        </h1>
+
+        <p className="text-gray-500">
+          Select a company to access Dashboard,
+          Setup, Run Check and History.
+        </p>
+
+      </div>
+
+      {loading ? (
+
+      <p>Loading...</p>
+
+    ) : (
+
+      <div className="card p-6">
+
+        <h2 className="text-2xl font-semibold mb-6">
+          Select Company
+        </h2>
+
+        <div>
+
+          <label className="block text-sm font-medium mb-2">
+            Company
+          </label>
+
+          <select
+            value={selectedCompanyId}
+            onChange={(e) =>
+              setSelectedCompanyId(
+                Number(e.target.value)
+              )
+            }
+            className="w-full border border-gray-300 rounded-lg px-4 py-3"
+          >
+
+            <option value={0}>
+              -- Select Company --
+            </option>
+
+            {companies.map(company => (
+
+              <option
+                key={company.company_id}
+                value={company.company_id}
+              >
+                {company.company_name}
+              </option>
+
+            ))}
+
+          </select>
+
+        </div>
+
+        <div className="mt-6">
+
+          <button
+            className="btn-primary"
+            onClick={() => {
+
+              const company =
+                companies.find(
+                  c =>
+                    c.company_id === selectedCompanyId
+                );
+
+              if (!company) {
+
+                alert(
+                  "Please select a company"
+                );
+
+                return;
+              }
+
+              openCompanyPortal(company);
+
+            }}
+          >
+            Open APCheck Portal
+          </button>
+
+        </div>
+
+      </div>
+
+    )}
+
+    </div>
+
+  );
+}
